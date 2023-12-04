@@ -1,3 +1,5 @@
+use regex::Regex;
+
 advent_of_code::solution!(4);
 
 pub fn part_one(input: &str) -> Option<u32> {
@@ -5,9 +7,7 @@ pub fn part_one(input: &str) -> Option<u32> {
         input
             .lines()
             .map(|l| {
-                let (game, rest) = l.split_once(": ").unwrap();
-
-                // let game = game.split_once(' ').unwrap().1.parse::<u32>().unwrap();
+                let (_, rest) = l.split_once(": ").unwrap();
 
                 let (winning, actual) = rest.split_once(" | ").unwrap();
 
@@ -45,7 +45,59 @@ fn calc_points(count: usize) -> u32 {
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    None
+    let ints = (1..206).collect::<Vec<u32>>();
+    let regex_num = Regex::new(r"\d+").unwrap();
+    Some(
+        input
+            .lines()
+            .map(|l| {
+                let (game, rest) = l.split_once(": ").unwrap();
+
+                let game = regex_num
+                    .find(game.split_once(' ').unwrap().1)
+                    .unwrap()
+                    .as_str()
+                    .parse::<u32>()
+                    .unwrap();
+
+                let (winning, actual) = rest.split_once(" | ").unwrap();
+
+                let winning = winning
+                    .split(' ')
+                    .filter_map(|num| num.parse::<u32>().ok())
+                    .collect::<Vec<_>>();
+
+                let actual = actual
+                    .split(' ')
+                    .filter_map(|num| num.parse::<u32>().ok())
+                    .filter(|num| winning.contains(num));
+
+                let actual = actual.count();
+
+                (game, ints[game as usize..actual + game as usize].to_vec())
+            })
+            .fold(vec![], |mut acc: Vec<u32>, (game, cards)| {
+                if game == 1 {
+                    acc.push(game);
+                    cards.iter().for_each(|card| acc.push(*card));
+
+                    acc
+                } else {
+                    let acc_count = acc.iter().filter(|a| **a == game).count() + 1;
+
+                    acc.push(game);
+
+                    for _ in 0..acc_count {
+                        cards.iter().for_each(|card| acc.push(*card));
+                    }
+
+                    acc
+                }
+            })
+            .len()
+            .try_into()
+            .unwrap(),
+    )
 }
 
 #[cfg(test)]
@@ -61,6 +113,6 @@ mod tests {
     #[test]
     fn test_part_two() {
         let result = part_two(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, None);
+        assert_eq!(result, Some(30));
     }
 }
