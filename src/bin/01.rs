@@ -1,12 +1,17 @@
 advent_of_code::solution!(1);
 
+// TODO: refactors before git, no longer works
 pub fn part_one(input: &str) -> Option<u32> {
     Some(
         input
             .lines()
-            .map(|s| {
+            .filter_map(|s| {
                 let digits = s.chars().filter_map(|c| c.to_digit(10)).collect::<Vec<_>>();
-                digits[0] * 10 + *digits.last().unwrap()
+                if digits.len() > 0 {
+                    Some(digits[0] * 10 + *digits.last().unwrap())
+                } else {
+                    None
+                }
             })
             .sum(),
     )
@@ -62,7 +67,7 @@ mod tests {
     #[test]
     fn test_part_one() {
         let result = part_one(&advent_of_code::template::read_file("examples", DAY));
-        assert_eq!(result, Some(142));
+        assert_eq!(result, Some(209));
     }
 
     #[test]
